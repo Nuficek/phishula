@@ -66,6 +66,31 @@
   .diploma .corner { position: absolute; width: 22mm; height: 22mm; }
   .diploma .c1 { left: 8mm; top: 8mm; } .diploma .c2 { right: 8mm; top: 8mm; }
 
+  /* Opakování */
+  .review { padding: 11mm 13mm 9mm; display: flex; flex-direction: column; }
+  .review h1 { font-size: 25pt; margin: 0; line-height: 1.05; }
+  .review .intro { margin: 1mm 0 3mm; font-size: 10.5pt; color: #4b3d68; }
+  .rv { display: grid; grid-template-columns: 19mm 1fr 1fr; gap: 3.5mm; align-items: start; padding: 2.6mm 0; border-bottom: 0.4mm dashed #cfc6e6; }
+  .rv .ic { width: 19mm; height: 19mm; border-radius: 50%; background: #f6f0e4; border: 0.8mm solid var(--c); padding: 1.6mm; }
+  .rv .ic svg { width: 100%; height: 100%; }
+  .rv h3 { margin: 0; font-size: 10pt; letter-spacing: 1px; text-transform: uppercase; color: var(--c); }
+  .rv .rule { margin: .5mm 0 0; font-size: 12.5pt; font-weight: 800; line-height: 1.22; }
+  .rv .ask { background: #f3eefc; border-radius: 3mm; padding: 2mm 3mm; font-size: 9.6pt; line-height: 1.3; }
+  .rv .ask p { margin: 0 0 1.2mm; }
+  .rv .ask p:last-child { margin: 0; }
+  .rv .ask i { color: #6c5d8c; }
+  .rv .ask b { color: #24163a; }
+  .quiz { margin-top: 3.5mm; display: grid; grid-template-columns: 1fr 1fr; gap: 1.5mm 6mm; font-size: 10pt; }
+  .quiz h2 { grid-column: 1 / -1; margin: 0 0 .5mm; font-size: 12.5pt; color: #8a4dff; }
+  .quiz div { display: flex; justify-content: space-between; gap: 3mm; border-bottom: 0.3mm solid #e4ddf2; padding-bottom: 1mm; }
+  .quiz span { font-weight: 800; white-space: nowrap; }
+  .quiz .ano { color: #137a3a; } .quiz .ne { color: #c4123a; }
+  .golden { margin-top: auto; background: #24163a; color: #fff; border-radius: 4mm; padding: 3.5mm 5mm; display: flex; align-items: center; gap: 5mm; }
+  .golden .big { font-size: 15pt; font-weight: 800; line-height: 1.15; }
+  .golden .big em { font-style: normal; color: #ff8a1f; }
+  .golden .lb { margin-left: auto; text-align: right; font-size: 9.5pt; white-space: nowrap; }
+  .golden .lb b { display: block; font-size: 17pt; color: #7dff9b; }
+
   /* Tahák */
   .cheat { padding: 14mm 16mm; font-size: 10.5pt; line-height: 1.35; }
   .cheat h1 { font-size: 26pt; margin: 0; }
@@ -164,7 +189,57 @@
     out.push('<section class="page"><div class="diplomas">' + dip + dip + '</div></section>');
   }
 
-  // 5) Tahák pro vedoucí
+  // 5) Opakování na konec hodiny
+  if (want('opakovani')) {
+    var RV = [
+      { k: 'lebka', c: '#d4691a', name: 'Lebka · Hřbitov hesel',
+        rule: 'Silné heslo je dlouhé jako věta. Neobsahuje jméno ani datum narození. Znají ho jen rodiče.',
+        q: [['Jak vypadá silné heslo?', 'dlouhé, velká i malá písmena, číslo i znak, dá se zapamatovat jako věta'],
+            ['Komu heslo prozradíme?', 'jen rodičům – ani nejlepšímu kamarádovi']] },
+      { k: 'pavouk', c: '#7a3fc9', name: 'Pavouk · Pavoučí krypta',
+        rule: 'Výhra zadarmo + spěch + chtějí heslo = podvod. Neklikám, ukážu to dospělému.',
+        q: [['Podle čeho poznáte podvodnou zprávu?', 'neznámý odesílatel, výhra bez soutěže, divný odkaz, chtějí heslo nebo adresu, tlačí na čas'],
+            ['Jak se takovému podvodu říká?', 'phishing – „rybaření“ hesel']] },
+      { k: 'netopyr', c: '#3a2a55', name: 'Netopýr · Sociální síť',
+        rule: 'Adresa, telefon, heslo, škola a „jsem sám doma“ na internet nepatří. Co zveřejním, už nevezmu zpátky.',
+        q: [['Co klidně sdílet můžeme?', 'mazlíčka, vlastní obrázek, přezdívku, oblíbenou barvu'],
+            ['Od kolika let bývají sociální sítě?', 'většinou od 13 let – a s rodiči']] },
+      { k: 'duch', c: '#2f86d6', name: 'Duch · Jeskyně kyberšikany',
+        rule: 'Kyberšikanu nešířím ani nelajkuji. Uložím důkaz, zablokuji a řeknu dospělému. Kamarádovi napíšu, že jsem s ním.',
+        q: [['Je říct to dospělému žalování?', 'ne – je to pomoc a odvaha'],
+            ['Kam můžu zavolat, když se bojím říct to doma?', 'Linka bezpečí 116 111 – zdarma, nonstop']] },
+      { k: 'dyne', c: '#e8701a', name: 'Dýně · Labyrint pastí',
+        rule: 'Strašidelná okna, dárky zadarmo a cizí lidé, kteří chtějí fotku, schůzku nebo tajemství = past.',
+        q: [['Cizí hráč chce fotku a schůzku a říká „neříkej to rodičům“. Co uděláte?', 'neodpovídám, nic neposílám, hned to řeknu rodičům'],
+            ['Vyskočí okno „Máš virus, klikni!“?', 'neklikám, zavřu ho a řeknu dospělému']] }
+    ];
+    var QZ = [
+      ['Heslo „anicka2016“ je bezpečné.', false],
+      ['Fotku svého obrázku z výtvarky můžu sdílet.', true],
+      ['Na zprávu o výhře mobilu mám rychle odpovědět.', false],
+      ['Říct dospělému o kyberšikaně je žalování.', false],
+      ['Kdo ve hře napíše, že je mu 10, je určitě dítě.', false],
+      ['Než si stáhnu novou hru, zeptám se rodičů.', true]
+    ];
+    out.push('<section class="page review">' +
+      '<h1 class="title">Opakování: Kniha strážce internetu</h1>' +
+      '<p class="intro">Na konci hodiny projděte s dětmi všech pět strašidel. U každého se nejdřív zeptejte, co si pamatují, a teprve pak přečtěte pravidlo. Odpovědi jsou psané kurzívou.</p>' +
+      RV.map(function (r) {
+        return '<div class="rv" style="--c:' + r.c + '"><div class="ic">' + D.ICONS[r.k] + '</div>' +
+          '<div><h3>' + r.name + '</h3><p class="rule">' + r.rule + '</p></div>' +
+          '<div class="ask">' + r.q.map(function (x) { return '<p><b>' + x[0] + '</b><br><i>' + x[1] + '</i></p>'; }).join('') + '</div></div>';
+      }).join('') +
+      '<div class="quiz"><h2>Rychlý kvíz: ruce nahoru, když platí ANO</h2>' +
+      QZ.map(function (x, i) {
+        return '<div>' + (i + 1) + '. ' + x[0] + '<span class="' + (x[1] ? 'ano">ANO' : 'ne">NE') + '</span></div>';
+      }).join('') + '</div>' +
+      '<div class="golden"><div class="big">Když se na internetu stane něco divného nebo nepříjemného:<br>' +
+      '<em>ZASTAV SE – NEKLIKEJ – ŘEKNI TO DOSPĚLÉMU.</em></div>' +
+      '<div class="lb">Linka bezpečí<b>116 111</b>zdarma · nonstop</div></div>' +
+      '</section>');
+  }
+
+  // 6) Tahák pro vedoucí
   if (want('tahak')) {
     var head = '<tr><th>Barva týmu</th><th>Začíná u</th>' + D.STATIONS.map(function (s) { return '<th>' + D.ICONS[s.key] + '</th>'; }).join('') + '<th>Kód brány</th></tr>';
     var rows = D.COLORS.map(function (c, ci) {

@@ -1,5 +1,5 @@
 /* Uloží hru do tabletu, aby fungovala i při výpadku Wi-Fi. Při změně souborů zvyšte číslo verze. */
-var CACHE = 'phishula-v3';
+var CACHE = 'phishula-v4';
 var FILES = ['./', 'index.html', 'style.css', 'fonts.css', 'data.js', 'game.js', 'jsqr.js', 'qrcode.js', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png', 'tisk.html'];
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(FILES); }).then(function () { return self.skipWaiting(); }));
