@@ -649,6 +649,15 @@
   function sub(n) { return (S.st.part || 0) === n; }
   function nextPart() { S.st.part = (S.st.part || 0) + 1; S.st.hintShown = false; save(); render(); }
 
+  // Po správné odpovědi: ukázat vysvětlení a počkat na tlačítko „Dál“
+  function explainThenNext(fbEl, text, next) {
+    fbEl.innerHTML = '<div class="explain">✅ ' + text + '</div>' +
+      '<button class="btn btn-big btn-next">Dál ➜</button>';
+    var b = fbEl.querySelector('.btn-next');
+    b.onclick = function () { b.disabled = true; sfx.tap(); next(); };
+    try { fbEl.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
+  }
+
   // Univerzální otázka s možnostmi
   function choiceQuestion(container, q, onRight) {
     var opts = shuffleSeeded(q.options, (S.color + 1) * (q.seed || 3));
@@ -662,8 +671,7 @@
         if (o.ok) {
           b.classList.add('right'); sfx.ok();
           $all('.choice', container).forEach(function (x) { x.disabled = true; });
-          $('#fb', container).innerHTML = '✅ ' + (o.why || 'Správně!');
-          setTimeout(onRight, 1600);
+          explainThenNext($('#fb', container), o.why || 'Správně!', onRight);
         } else {
           b.classList.add('wrongish');
           setTimeout(function () { b.classList.remove('wrongish'); }, 900);
@@ -695,8 +703,7 @@
             sfx.ok();
             done.push(remaining[0]); S.st.doneItems = done; save();
             $all('.deck-btns .btn', container).forEach(function (x) { x.disabled = true; });
-            $('#fb', container).innerHTML = '✅ ' + it.why;
-            setTimeout(draw, 1500);
+            explainThenNext($('#fb', container), it.why, draw);
           } else {
             // špatně – karta se zařadí na konec
             order.splice(order.indexOf(remaining[0]), 1); order.push(remaining[0]); S.st.order = order;
@@ -753,8 +760,7 @@
             if (g.ok) {
               b.classList.add('glow'); sfx.ok();
               $all('.grave', c).forEach(function (x) { x.disabled = true; });
-              $('#fb', c).innerHTML = '✅ ' + g.why;
-              setTimeout(nextPart, 2600);
+              explainThenNext($('#fb', c), g.why, nextPart);
             } else { b.classList.add('sunk'); wrong(g.why); }
           };
         });
