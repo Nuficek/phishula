@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phishula – karty k tisku</title>
+<link rel="stylesheet" href="fonts.css">
+<style>
+  @page { size: A4 portrait; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body { font-family: 'Baloo 2', system-ui, sans-serif; color: #24163a; background: #6b5a8c; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .toolbar { position: sticky; top: 0; z-index: 2; background: #24163a; color: #fff; padding: 12px 16px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .toolbar button { font: inherit; font-weight: 800; border: 0; border-radius: 12px; padding: 10px 18px; background: #ff8a1f; color: #24163a; cursor: pointer; }
+  .toolbar p { margin: 0; font-size: 14px; opacity: .85; }
+  .page { width: 210mm; height: 297mm; margin: 10mm auto; background: #fff; position: relative; overflow: hidden; page-break-after: always; break-after: page; }
+  .page:last-child { page-break-after: auto; break-after: auto; }
+  .title { font-family: 'Rubik Wet Paint', 'Baloo 2', sans-serif; font-weight: 400; color: #1fae55; }
+  svg { display: block; }
+
+  /* Karta stanoviště */
+  .station { padding: 14mm 16mm; display: flex; flex-direction: column; align-items: center; text-align: center; border: 4mm solid var(--c); }
+  .station .head { font-size: 15pt; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: #6c5d8c; }
+  .station .icon { width: 52mm; height: 52mm; margin: 4mm 0 0; }
+  .station .icon svg { width: 100%; height: 100%; }
+  .station h1 { font-family: 'Rubik Wet Paint', 'Baloo 2', sans-serif; font-weight: 400; font-size: 64pt; line-height: 1; margin: 2mm 0 0; color: var(--c); }
+  .station h2 { margin: 0 0 4mm; font-size: 18pt; }
+  .station .qr { width: 118mm; height: 118mm; padding: 4mm; border: 1.5mm solid #24163a; border-radius: 6mm; background: #fff; }
+  .station .qr svg { width: 100%; height: 100%; }
+  .station .code { margin-top: 5mm; font-size: 13pt; color: #6c5d8c; }
+  .station .code b { font-size: 18pt; color: #24163a; letter-spacing: 1px; }
+  .station .foot { position: absolute; bottom: 9mm; left: 0; right: 0; font-size: 12pt; color: #6c5d8c; }
+
+  /* Start */
+  .start { padding: 20mm; display: flex; flex-direction: column; align-items: center; text-align: center; border: 4mm solid #1fae55; }
+  .start h1 { font-size: 46pt; margin: 4mm 0; line-height: 1.05; }
+  .start .qr { width: 150mm; height: 150mm; }
+  .start .qr svg { width: 100%; height: 100%; }
+  .start .url { font-size: 13pt; word-break: break-all; margin-top: 4mm; }
+  .start ol { text-align: left; font-size: 15pt; }
+
+  /* Kartičky týmů */
+  .cards { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; height: 100%; }
+  .tcard { border: 0.4mm dashed #b8aed0; padding: 9mm 8mm; display: flex; flex-direction: column; }
+  .tcard h3 { margin: 0; font-family: 'Rubik Wet Paint', 'Baloo 2', sans-serif; font-weight: 400; color: #1fae55; font-size: 20pt; line-height: 1.05; }
+  .tcard .line { border-bottom: 0.5mm solid #24163a; height: 10mm; margin-top: 3mm; font-size: 10pt; color: #6c5d8c; display: flex; align-items: flex-end; padding-bottom: 1mm; }
+  .tcard .boxes { display: grid; grid-template-columns: repeat(5, 1fr); gap: 2.5mm; margin-top: auto; }
+  .tcard .box { border: 0.8mm solid #24163a; border-radius: 3mm; display: flex; flex-direction: column; align-items: center; padding: 2mm 0 0; }
+  .tcard .box svg { width: 13mm; height: 13mm; }
+  .tcard .box span { font-size: 7pt; font-weight: 800; letter-spacing: .5px; }
+  .tcard .box i { display: block; width: 100%; height: 17mm; border-top: 0.5mm dashed #b8aed0; margin-top: 1mm; }
+  .tcard .note { font-size: 9pt; color: #6c5d8c; margin: 3mm 0; }
+
+  /* Diplomy (2 na stránku) */
+  .diplomas { display: grid; grid-template-rows: 1fr 1fr; height: 100%; }
+  .diploma { margin: 7mm; border: 2mm solid #8a4dff; border-radius: 6mm; outline: 0.6mm solid #8a4dff; outline-offset: -4.5mm; position: relative; padding: 9mm 14mm; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .diploma + .diploma { margin-top: 0; }
+  .diploma .d-top { font-size: 12pt; letter-spacing: 3px; text-transform: uppercase; color: #6c5d8c; font-weight: 800; }
+  .diploma h1 { font-size: 34pt; margin: 1mm 0; line-height: 1.05; }
+  .diploma .name { width: 75%; border-bottom: 0.6mm solid #24163a; height: 13mm; margin: 4mm 0 2mm; }
+  .diploma p { margin: 1mm 0; font-size: 12pt; }
+  .diploma .row { display: flex; gap: 4mm; margin: 3mm 0; }
+  .diploma .row svg { width: 14mm; height: 14mm; }
+  .diploma .sig { display: flex; justify-content: space-between; width: 80%; margin-top: 4mm; font-size: 10pt; color: #6c5d8c; }
+  .diploma .sig div { border-top: 0.4mm solid #24163a; width: 40%; padding-top: 1mm; }
+  .diploma .corner { position: absolute; width: 22mm; height: 22mm; }
+  .diploma .c1 { left: 8mm; top: 8mm; } .diploma .c2 { right: 8mm; top: 8mm; }
+
+  /* Tahák */
+  .cheat { padding: 14mm 16mm; font-size: 10.5pt; line-height: 1.35; }
+  .cheat h1 { font-size: 26pt; margin: 0; }
+  .cheat h2 { font-size: 14pt; margin: 5mm 0 2mm; color: #8a4dff; }
+  .cheat table { width: 100%; border-collapse: collapse; }
+  .cheat th, .cheat td { border: 0.3mm solid #cfc6e6; padding: 1.4mm 2mm; text-align: center; }
+  .cheat td:first-child, .cheat th:first-child { text-align: left; }
+  .cheat .dot { display: inline-block; width: 4mm; height: 4mm; border-radius: 50%; margin-right: 2mm; vertical-align: -0.6mm; border: 0.3mm solid #24163a; }
+  .cheat th svg { width: 9mm; height: 9mm; margin: 0 auto; }
+  .cheat ul { margin: 1mm 0; padding-left: 5mm; }
+  .cheat .two { display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; }
+  .cheat .pin { background: #f3eefc; border-radius: 3mm; padding: 2mm 4mm; }
+
+  @media print {
+    body { background: #fff; }
+    .toolbar { display: none; }
+    .page { margin: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="toolbar">
+  <button onclick="window.print()">🖨 Vytisknout</button>
+  <p>Tiskněte na A4, měřítko 100 % (bez „přizpůsobit stránce“), barevně. Kartiček týmů a diplomů vytiskněte tolik, kolik potřebujete.</p>
+</div>
+<div id="pages"></div>
+<script src="qrcode.js"></script>
+<script src="data.js"></script>
+<script>
+(function () {
+  var D = window.PH, out = [];
+  var params = new URLSearchParams(location.search);
+  var only = params.get('jen'); // pro vytvoření PDF: karty|start|kartičky|diplomy|tahák
+  function qrSvg(text) {
+    var q = qrcode(0, 'M'); q.addData(text); q.make();
+    return q.createSvgTag({ cellSize: 4, margin: 0, scalable: true });
+  }
+  function want(k) { return !only || only.split(',').indexOf(k) >= 0; }
+  var stColors = ['#ff8a1f', '#7a3fc9', '#3a2a55', '#3fa9ff', '#e8701a'];
+
+  // 1) Karty stanovišť
+  if (want('karty')) {
+    D.STATIONS.forEach(function (st, i) {
+      out.push('<section class="page station" style="--c:' + stColors[i] + '">' +
+        '<div class="head">Noční útok ducha Phishuly · stanoviště</div>' +
+        '<div class="icon">' + D.ICONS[st.key] + '</div>' +
+        '<h1>' + st.symbol + '</h1><h2>' + st.name + '</h2>' +
+        '<div class="qr">' + qrSvg(st.qr) + '</div>' +
+        '<div class="code">Kamera nefunguje? Napište ve hře kód: <b>' + st.code + '</b></div>' +
+        '<div class="foot">Naskenujte tlačítkem „Naskenovat kartu“ přímo ve hře – ne fotoaparátem tabletu.</div>' +
+        '</section>');
+    });
+    out.push('<section class="page station" style="--c:#8a4dff">' +
+      '<div class="head">Noční útok ducha Phishuly · cíl hry</div>' +
+      '<div class="icon">' + D.ICONS.brana + '</div>' +
+      '<h1>BRÁNA</h1><h2>Digitální brána – patří k vedoucí</h2>' +
+      '<div class="qr">' + qrSvg(D.GATE.qr) + '</div>' +
+      '<div class="code">Kamera nefunguje? Napište ve hře kód: <b>' + D.GATE.code + '</b></div>' +
+      '<div class="foot">Kdo bránu odemkne první, vyhrává!</div></section>');
+  }
+
+  // 2) Startovní QR (jen když hra běží z internetu)
+  if (want('start') && /^https?:/.test(location.protocol)) {
+    var url = location.href.split('#')[0].split('?')[0].replace(/tisk\.html$/, '');
+    out.push('<section class="page start">' +
+      '<h1 class="title">Noční útok ducha Phishuly</h1>' +
+      '<p style="font-size:18pt;margin:0 0 6mm"><b>Naskenujte fotoaparátem tabletu a otevřete hru</b></p>' +
+      '<div class="qr">' + qrSvg(url) + '</div>' +
+      '<div class="url">' + url + '</div>' +
+      '</section>');
+  }
+
+  // 3) Kartičky týmů (4 na stránku)
+  if (want('karticky')) {
+    var card = '<div class="tcard"><h3>Kartička týmu</h3>' +
+      '<div class="line">Jméno týmu:</div><div class="line">Barva týmu:</div>' +
+      '<p class="note">Sem zapisujte tajná čísla. Na konci je zadáte do Digitální brány ve stejném pořadí.</p>' +
+      '<div class="boxes">' + D.STATIONS.map(function (st) {
+        return '<div class="box">' + D.ICONS[st.key] + '<span>' + st.symbol + '</span><i></i></div>';
+      }).join('') + '</div></div>';
+    out.push('<section class="page"><div class="cards">' + card + card + card + card + '</div></section>');
+  }
+
+  // 4) Diplomy (2 na stránku)
+  if (want('diplomy')) {
+    var dip = '<div class="diploma">' +
+      '<div class="corner c1">' + D.ICONS.dyne + '</div><div class="corner c2">' + D.ICONS.duch + '</div>' +
+      '<div class="d-top">Diplom</div>' +
+      '<h1 class="title">Strážce bezpečného internetu</h1>' +
+      '<div class="name"></div>' +
+      '<p>porazil(a) ducha <b>Phishulu</b> a ví, jak se chránit na internetu:</p>' +
+      '<p><b>silné heslo · žádné podvody · soukromí · zastat se kamaráda · poradit se s dospělým</b></p>' +
+      '<div class="row">' + D.STATIONS.map(function (s) { return D.ICONS[s.key]; }).join('') + '</div>' +
+      '<div class="sig"><div>Datum</div><div>Vedoucí kroužku</div></div>' +
+      '<p style="font-size:9pt;color:#6c5d8c;margin-top:2mm">Kroužek Technika a svět kolem nás · Halloween</p></div>';
+    out.push('<section class="page"><div class="diplomas">' + dip + dip + '</div></section>');
+  }
+
+  // 5) Tahák pro vedoucí
+  if (want('tahak')) {
+    var head = '<tr><th>Barva týmu</th><th>Začíná u</th>' + D.STATIONS.map(function (s) { return '<th>' + D.ICONS[s.key] + '</th>'; }).join('') + '<th>Kód brány</th></tr>';
+    var rows = D.COLORS.map(function (c, ci) {
+      var r = D.routeFor(ci), first = D.STATIONS[r[0] - 1];
+      return '<tr><td><span class="dot" style="background:' + c.hex + '"></span>' + c.name + '</td><td>' + first.symbol + '</td>' +
+        D.DIGITS[ci].map(function (d) { return '<td>' + d + '</td>'; }).join('') + '<td><b>' + D.DIGITS[ci].join('') + '</b></td></tr>';
+    }).join('');
+    out.push('<section class="page cheat">' +
+      '<h1 class="title">Tahák pro vedoucí</h1>' +
+      '<p>Neukazujte dětem. Každá barva týmu má jiná tajná čísla, takže týmy nemohou opisovat.</p>' +
+      '<h2>Tajná čísla a kódy brány</h2><table>' + head + rows + '</table>' +
+      '<p>Pořadí stanovišť: každý tým začíná jinde a pokračuje dokola (LEBKA → PAVOUK → NETOPÝR → DUCH → DÝNĚ → LEBKA…). Hra sama hlídá, kterou kartu mají hledat.</p>' +
+      '<div class="two"><div>' +
+      '<h2>Průběh hodiny (cca 60 min)</h2><ul>' +
+      '<li><b>Před hodinou (10 min):</b> rozmístit 5 karet stanovišť po třídě, kartu BRÁNA na svůj stůl, otevřít hru na tabletech.</li>' +
+      '<li><b>0–8 min:</b> týmy si vyberou jméno a barvu (každý tým jinou!), přečtou příběh, rozdáte kartičky a tužky.</li>' +
+      '<li><b>8 min:</b> všichni čekají na obrazovce START. Zvolejte „START!“.</li>' +
+      '<li><b>8–45 min:</b> hra. Týmy hledají karty, řeší úkoly, zapisují čísla.</li>' +
+      '<li><b>Cíl:</b> tým naskenuje BRÁNU u vás a zadá kód. Pořadí vidíte podle toho, kdo přiběhne – na tabletu je navíc čas odemčení na vteřinu.</li>' +
+      '<li><b>Posledních 10 min:</b> vyhlášení, diplomy, společně projít „Knihu strážce“ (zobrazí se na konci hry).</li></ul>' +
+      '</div><div>' +
+      '<h2>Správné odpovědi</h2><ul>' +
+      '<li><b>LEBKA:</b> nejsilnější heslo „ZelenyKocourJiDyne7!“; heslo smí znát jen rodiče.</li>' +
+      '<li><b>PAVOUK:</b> 5 pastí v e-mailu – odesílatel, výhra v předmětu, odkaz, „pošli heslo a adresu“, „do 5 minut“. Pak „Neklikám, ukážu dospělému“.</li>' +
+      '<li><b>NETOPÝR:</b> zveřejnit jen pejska, obrázek, přezdívku, oblíbenou barvu. Zbytek si nechat.</li>' +
+      '<li><b>DUCH:</b> „Tohle není fér… a řeknu dospělému“ → „snímek, zablokuji, řeknu rodičům“ → „Neboj, jsem s tebou…“.</li>' +
+      '<li><b>DÝNĚ:</b> v pořádku jsou jen paní učitelka, knihovna s mámou a „zeptáš se rodičů“. Ostatní jsou pasti.</li></ul>' +
+      '</div></div>' +
+      '<h2>Menu pro vedoucí v tabletu</h2>' +
+      '<p class="pin">Ozubené kolečko vpravo dole → <b>PIN 3110</b>. Umí: odmrazit tým, uznat úkol (když se něco zasekne), vypnout zvuk, zobrazit QR kód pro otevření hry, tahák s čísly a <b>Nová hra</b> (smaže tým – použijte před další skupinou).</p>' +
+      '<h2>Pravidla zmrazení</h2>' +
+      '<p>Špatná odpověď = tým je 10 s zmrazený a vidí vysvětlení, proč to byla past. Nápověda = 30 s. Špatný kód brány = 15 s. Ztracené číslo = 45 s. Díky tomu pořadí v cíli odpovídá výkonu a nemusíte nic přepočítávat.</p>' +
+      '</section>');
+  }
+
+  document.getElementById('pages').innerHTML = out.join('');
+})();
+</script>
+</body>
+</html>
