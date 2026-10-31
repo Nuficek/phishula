@@ -66,6 +66,21 @@
   .diploma .corner { position: absolute; width: 22mm; height: 22mm; }
   .diploma .c1 { left: 8mm; top: 8mm; } .diploma .c2 { right: 8mm; top: 8mm; }
 
+  /* Zadní strana diplomu */
+  .book { margin: 7mm; border: 0.6mm dashed #cfc6e6; border-radius: 6mm; padding: 6mm 11mm 5mm; display: flex; flex-direction: column; }
+  .book + .book { margin-top: 0; }
+  .book h1 { font-size: 24pt; margin: 0; text-align: center; line-height: 1.05; }
+  .book .sub { text-align: center; font-size: 9.5pt; color: #6c5d8c; margin: .5mm 0 2.5mm; }
+  .book ul { list-style: none; margin: 0; padding: 0; }
+  .book li { display: flex; align-items: center; gap: 4mm; padding: 2.2mm 0; border-bottom: 0.3mm dashed #e4ddf2; font-size: 12pt; line-height: 1.25; }
+  .book li:last-child { border-bottom: 0; }
+  .book li i { flex: none; width: 13mm; height: 13mm; border-radius: 50%; background: #f6f0e4; border: 0.6mm solid #b98cff; padding: 1mm; }
+  .book li i svg { width: 100%; height: 100%; }
+  .book .gold { margin-top: auto; background: #24163a; color: #fff; border-radius: 3mm; padding: 2mm 4mm; display: flex; align-items: center; gap: 4mm; font-size: 10pt; }
+  .book .gold em { font-style: normal; color: #ff8a1f; font-weight: 800; }
+  .book .gold span { margin-left: auto; white-space: nowrap; text-align: right; font-size: 8.5pt; }
+  .book .gold b { color: #7dff9b; font-size: 12.5pt; }
+
   /* Opakování */
   .review { padding: 11mm 13mm 9mm; display: flex; flex-direction: column; }
   .review h1 { font-size: 25pt; margin: 0; line-height: 1.05; }
@@ -187,6 +202,13 @@
       '<div class="sig"><div>Datum</div><div>Vedoucí kroužku</div></div>' +
       '<p style="font-size:9pt;color:#6c5d8c;margin-top:2mm">Kroužek Technika a svět kolem nás · Halloween</p></div>';
     out.push('<section class="page"><div class="diplomas">' + dip + dip + '</div></section>');
+    // zadní strana – tisknout oboustranně (otočení podle dlouhé strany)
+    var book = '<div class="book"><h1 class="title">Kniha strážce internetu</h1>' +
+      '<p class="sub">Pět pravidel, která jsi získal(a) od pěti strašidel. Ukaž je doma rodičům!</p><ul>' +
+      D.STATIONS.map(function (st) { return '<li><i>' + D.ICONS[st.key] + '</i><span>' + D.RULES[st.key] + '</span></li>'; }).join('') +
+      '</ul><div class="gold"><div>Když se na internetu stane něco divného:<br><em>ZASTAV SE – NEKLIKEJ – ŘEKNI TO DOSPĚLÉMU.</em></div>' +
+      '<span>Linka bezpečí<br><b>116 111</b><br>zdarma · nonstop</span></div></div>';
+    out.push('<section class="page"><div class="diplomas">' + book + book + '</div></section>');
   }
 
   // 5) Opakování na konec hodiny

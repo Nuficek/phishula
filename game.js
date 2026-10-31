@@ -321,13 +321,7 @@
   }
 
   // ---------- 6) Odměna ----------
-  var RULES = {
-    lebka: 'Silné heslo je dlouhé jako věta – velká i malá písmena, číslo a znak. Znají ho jen rodiče.',
-    pavouk: 'Výhra zadarmo + spěch + chtějí heslo = podvod (phishing). Neklikej a ukaž to dospělému.',
-    netopyr: 'Adresa, telefon, heslo, škola a „jsem sám doma“ na internet nepatří. Co jednou zveřejníš, už nevezmeš zpátky.',
-    duch: 'Kyberšikanu nešiř ani nelajkuj. Udělej snímek obrazovky, útočníka zablokuj a řekni to dospělému. Pomůže i Linka bezpečí 116 111 (zdarma).',
-    dyne: 'Strašidelná okna, dárky zadarmo a cizí lidé, kteří chtějí tajemství nebo schůzku = past. Poraď se s dospělým.'
-  };
+  var RULES = D.RULES;
   function viewReward() {
     var st = station(S.current);
     return '' +
