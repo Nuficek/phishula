@@ -7,7 +7,7 @@
 
   var D = window.PH;
   var STORE_KEY = 'phishula-v1';
-  var FREEZE_WRONG = 10, FREEZE_HINT = 30, FREEZE_LOCK = 15, FREEZE_LOST = 45;
+  var FREEZE_WRONG = 20, FREEZE_HINT = 45, FREEZE_LOCK = 20, FREEZE_LOST = 60;
 
   var app = document.getElementById('app');
   var overlayRoot = document.getElementById('overlays');
@@ -440,7 +440,7 @@
       $('#hintBtn').onclick = function () {
         if (!confirm('Opravdu chcete nápovědu? Phishula vás zmrazí na ' + FREEZE_HINT + ' sekund.')) return;
         S.hints++; S.st.hintShown = true;
-        freeze(FREEZE_HINT, 'Phishula vám šeptá nápovědu… ale nejdřív vás na chvíli zmrazí!');
+        freeze(FREEZE_HINT, '💡 ' + currentHint(), FACTS[S.current] || '', 'hint');
         showHint();
       };
       if (S.st.hintShown) showHint();
@@ -463,17 +463,20 @@
   // Zmrazení (trest za chybu)
   // ---------------------------------------------------------------
   var freezeTimer = null;
-  function freeze(sec, msg) {
+  function freeze(sec, msg, more, kind) {
     S.freezeUntil = now() + sec * 1000;
+    S.freezeTotalSec = sec;
     S.freezeMsg = msg || '';
+    S.freezeMore = more || '';
+    S.freezeKind = kind || 'wrong';
     S.frozenTotal += sec;
     save();
     checkFreeze();
   }
-  function wrong(msg) {
+  function wrong(msg, more) {
     S.wrong++;
     sfx.bad();
-    freeze(FREEZE_WRONG, msg);
+    freeze(FREEZE_WRONG, msg, more);
   }
   function checkFreeze() {
     var left = Math.ceil((S.freezeUntil - now()) / 1000);
@@ -484,19 +487,26 @@
       return;
     }
     if (!el) {
+      var isHint = S.freezeKind === 'hint';
       el = document.createElement('div');
       el.id = 'freezeOverlay';
-      el.className = 'overlay freeze';
+      el.className = 'overlay freeze' + (isHint ? ' freeze-hint' : '');
       el.innerHTML = '<div class="freeze-box">' +
-        '<div class="phishula laugh">' + phishulaSVG() + '</div>' +
-        '<h2>❄️ Zmrazeno! ❄️</h2>' +
+        '<div class="freeze-top"><div class="phishula laugh">' + phishulaSVG() + '</div>' +
+        '<div><h2>' + (isHint ? '💡 Nápověda' : '❄️ Zmrazeno!') + '</h2>' +
+        '<div class="freeze-count"></div></div></div>' +
+        '<div class="freeze-bar"><span></span></div>' +
         '<p class="freeze-msg"></p>' +
-        '<div class="freeze-count"></div>' +
-        '<p class="small-note">Chyba je v pořádku – hlavně si zapamatujte, proč to byla past.</p></div>';
+        '<div class="freeze-more"' + (S.freezeMore ? '' : ' hidden') + '><b>' + (isHint ? 'Zajímavost' : 'Víte proč?') + '</b><p></p></div>' +
+        '<p class="small-note">' + (isHint ? 'Přečtěte si nápovědu nahlas celému týmu. Až čas doběhne, můžete pokračovat.'
+          : 'Chyba je v pořádku – přečtěte si vysvětlení nahlas celému týmu.') + '</p></div>';
       overlayRoot.appendChild(el);
+      $('.freeze-msg', el).textContent = S.freezeMsg;
+      $('.freeze-more p', el).textContent = S.freezeMore || '';
     }
-    $('.freeze-msg', el).textContent = S.freezeMsg;
-    $('.freeze-count', el).textContent = left;
+    $('.freeze-count', el).textContent = left + ' s';
+    var total = S.freezeTotalSec || left;
+    $('.freeze-bar span', el).style.width = Math.max(0, Math.min(100, 100 * left / total)) + '%';
     if (!freezeTimer) freezeTimer = setInterval(checkFreeze, 250);
   }
 
@@ -675,7 +685,7 @@
         } else {
           b.classList.add('wrongish');
           setTimeout(function () { b.classList.remove('wrongish'); }, 900);
-          wrong(o.why);
+          wrong(o.why, o.more);
         }
       };
     });
@@ -707,7 +717,7 @@
           } else {
             // špatně – karta se zařadí na konec
             order.splice(order.indexOf(remaining[0]), 1); order.push(remaining[0]); S.st.order = order;
-            wrong(it.why);
+            wrong(it.why, it.more);
             draw();
           }
         };
@@ -727,11 +737,21 @@
            'Co byste chtěli slyšet vy, kdyby vám bylo smutno?'],
     dyne: ['Past poznáte tak, že vás straší, slibuje něco zadarmo, chce heslo nebo tajemství. Co je od školy, knihovny nebo s rodiči, je v pořádku.']
   };
-  function showHint() {
+  function currentHint() {
     var list = HINTS[S.current] || [];
-    var t = list[Math.min(S.st.part || 0, list.length - 1)];
+    return list[Math.min(S.st.part || 0, list.length - 1)] || '';
+  }
+  function showHint() {
+    var t = currentHint();
     var el = $('#hintText'); if (el && t) el.textContent = '💡 ' + t;
   }
+  var FACTS = {
+    lebka: 'Náhodné heslo z 20 znaků by i velmi rychlý počítač zkoušel miliony let. Krátké heslo z jednoho slova prolomí za pár vteřin. Proto je nejlepší dlouhá vymyšlená věta, třeba „ZelenyKocourJiDyne7!“ – je dlouhá a přitom se dobře pamatuje.',
+    pavouk: 'Slovo phishing pochází z anglického fishing – rybaření. Podvodník hodí návnadu (výhru, dárek, strašidelné varování) a čeká, kdo se chytí. Proto má náš Phishula rybářský prut!',
+    netopyr: 'Co se jednou objeví na internetu, si může kdokoli uložit nebo vyfotit obrazovku. I když to potom smažeš, kopie už může existovat. Než něco zveřejníš, zeptej se: Nevadilo by mi, kdyby to viděl úplně cizí člověk?',
+    duch: 'Na Linku bezpečí 116 111 mohou děti volat zdarma, ve dne i v noci, a nemusí říkat své jméno. Pomůže, když se děje něco, s čím si nevíš rady – i když se bojíš to říct doma.',
+    dyne: 'Na internetu nevidíš, kdo je na druhé straně. Kdokoli si může dát obrázek dítěte a psát, že je mu 10 let. Proto cizím lidem neposíláme fotky, nepíšeme adresu a nikdy se s nimi nescházíme bez rodičů.'
+  };
 
   function mountStation() {
     var c = stBody();
@@ -741,11 +761,11 @@
     if (k === 'lebka') {
       if (sub(0)) {
         var graves = [
-          { t: '123456', why: '„123456“ je nejčastější heslo na světě. Phishula ho uhodne dřív, než mrknete!' },
-          { t: 'anicka2016', why: 'Jméno a rok narození o vás zná každý spolužák. To je slabé heslo.' },
-          { t: 'heslo', why: 'Slovo „heslo“ zkouší duchové úplně jako první!' },
-          { t: 'Phishula1', why: 'Je krátké – jen jedno slovo a číslo. Na ducha moc slabé.' },
-          { t: 'qwertz', why: 'To jsou jen písmenka vedle sebe na klávesnici. Prolomí se za vteřinu.' },
+          { t: '123456', why: '„123456“ je nejčastější heslo na světě. Phishula ho uhodne dřív, než mrknete!', more: 'Počítač dokáže vyzkoušet miliony hesel za vteřinu. Úplně první zkouší ta nejčastější: 123456, heslo, qwerty. Takové heslo je jako dveře bez zámku.' },
+          { t: 'anicka2016', why: 'Jméno a rok narození o vás zná každý spolužák. To je slabé heslo.', more: 'Jméno, jméno pejska nebo rok narození znají spolužáci a často se dají najít i na internetu. Dobré heslo nesmí jít uhodnout podle toho, co o vás lidé vědí.' },
+          { t: 'heslo', why: 'Slovo „heslo“ zkouší duchové úplně jako první!', more: 'Podvodníci mají seznamy nejčastějších hesel a začínají jimi. Slova jako „heslo“, „password“ nebo „ahoj“ jsou na začátku každého takového seznamu.' },
+          { t: 'Phishula1', why: 'Je krátké – jen jedno slovo a číslo. Na ducha moc slabé.', more: 'Každé písmeno navíc dělá heslo mnohem silnějším. Jedno slovo s číslem na konci počítač prolomí rychle. Silné heslo je dlouhé – nejlépe celá vymyšlená věta.' },
+          { t: 'qwertz', why: 'To jsou jen písmenka vedle sebe na klávesnici. Prolomí se za vteřinu.', more: 'qwertz jsou první písmena na horní řadě klávesnice. Takové „cestičky“ po klávesnici (asdf, 1234) zkoušejí podvodníci hned na začátku.' },
           { t: 'ZelenyKocourJiDyne7!', ok: true, why: 'Správně! Je dlouhé jako věta a má velká i malá písmena, číslo i znak. A dá se dobře zapamatovat!' }
         ];
         var gs = shuffleSeeded(graves, S.color + 11);
@@ -761,7 +781,7 @@
               b.classList.add('glow'); sfx.ok();
               $all('.grave', c).forEach(function (x) { x.disabled = true; });
               explainThenNext($('#fb', c), g.why, nextPart);
-            } else { b.classList.add('sunk'); wrong(g.why); }
+            } else { b.classList.add('sunk'); wrong(g.why, g.more); }
           };
         });
       } else {
@@ -770,9 +790,9 @@
           intro: '<p class="story-line">Výborně, silné heslo máte! Ale Phishula vám ho chce vylákat…</p>',
           text: 'Komu smíte své heslo prozradit?',
           options: [
-            { t: '👫 Nejlepšímu kamarádovi', why: 'Kamarádi se někdy pohádají – a heslo pak můžou zneužít, i nechtěně.' },
-            { t: '💎 Hráči ve hře, který za něj slíbí diamanty', why: 'To je podvod! Kdo chce heslo za odměnu, chce vám ukrást účet.' },
-            { t: '📣 Celé třídě, ať ho nezapomenu', why: 'Heslo, které zná hodně lidí, už nic nechrání.' },
+            { t: '👫 Nejlepšímu kamarádovi', why: 'Kamarádi se někdy pohádají – a heslo pak můžou zneužít, i nechtěně.', more: 'Kamarád by se mohl přihlásit za vás, napsat něco vaším jménem nebo heslo nechtěně prozradit dál. Heslo je jako kartáček na zuby – nepůjčuje se ani nejlepšímu kamarádovi.' },
+            { t: '💎 Hráči ve hře, který za něj slíbí diamanty', why: 'To je podvod! Kdo chce heslo za odměnu, chce vám ukrást účet.', more: 'Nikdo vám nedá nic zdarma za heslo. Kdo heslo získá, může vám vzít účet, postavičku i všechno, co máte ve hře nasbírané.' },
+            { t: '📣 Celé třídě, ať ho nezapomenu', why: 'Heslo, které zná hodně lidí, už nic nechrání.', more: 'Čím víc lidí heslo zná, tím je slabší. Když heslo zapomenete, nastavíte si s rodiči nové – nikdo jiný ho znát nemusí.' },
             { t: '👨‍👩‍👧 Jen rodičům', ok: true, why: 'Správně! Heslo znají jen rodiče – nikdo jiný.' }
           ]
         }, stationSolved);
@@ -827,9 +847,9 @@
           intro: '<p class="story-line">Pasti jste odhalili! Ale co teď s tím e-mailem?</p>',
           text: 'Co s takovou zprávou uděláte?',
           options: [
-            { t: '🖱️ Kliknu na odkaz, jen se podívám', why: 'I jedno kliknutí může do tabletu pustit virus nebo vás dovést na falešnou stránku.' },
-            { t: '🔑 Pošlu heslo – chci ten mobil!', why: 'Tím byste Phishulovi dali klíč od svého účtu. Žádný mobil nepřijde.' },
-            { t: '📨 Přepošlu ji kamarádům, ať taky vyhrají', why: 'Tím byste podvod poslali dál a kamarádi by mohli naletět.' },
+            { t: '🖱️ Kliknu na odkaz, jen se podívám', why: 'I jedno kliknutí může do tabletu pustit virus nebo vás dovést na falešnou stránku.', more: 'Odkaz může vést na stránku, která vypadá jako skutečná, ale je falešná a krade hesla. Na odkaz z podezřelé zprávy se neklikejte ani „jen podívat“ – ukažte ji dospělému.' },
+            { t: '🔑 Pošlu heslo – chci ten mobil!', why: 'Tím byste Phishulovi dali klíč od svého účtu. Žádný mobil nepřijde.', more: 'Skutečné firmy ani soutěže po vás heslo nikdy nechtějí. Kdo si o heslo řekne, je podvodník. A výhru v soutěži, do které jste se nepřihlásili, vyhrát nemůžete.' },
+            { t: '📨 Přepošlu ji kamarádům, ať taky vyhrají', why: 'Tím byste podvod poslali dál a kamarádi by mohli naletět.', more: 'Podvodníci chtějí, aby se jejich zpráva šířila co nejvíc. Když ji přepošlete, pomáháte jim. Lepší je kamarády varovat: „Pozor, chodí podvodná zpráva o výhře mobilu!“' },
             { t: '🛑 Neklikám, ukážu ji dospělému a smažu ji', ok: true, why: 'Správně! Takovému e-mailu se říká phishing – „rybaření“ hesel.' }
           ]
         }, stationSolved);
@@ -843,15 +863,15 @@
         intro: '<p class="story-line">Netopýr Bedřich si zakládá profil na sociální síti. Phishula číhá, co prozradí! Pomozte mu rozhodnout:</p>',
         yes: '🌐 Zveřejním', no: '🔒 Nechám si pro sebe',
         items: [
-          { t: '🐶 Fotka mého pejska', ok: true, why: 'Fotka zvířátka je v pořádku – jen ať na ní není vidět adresa.' },
-          { t: '🎨 Obrázek, který jsem namaloval', ok: true, why: 'Vlastní obrázek klidně sdílej, je to tvoje dílo.' },
-          { t: '🦇 Přezdívka „Noční letec“ místo celého jména', ok: true, why: 'Přezdívka je chytrá – cizí lidé nepoznají, kdo jsi.' },
-          { t: '🌈 Moje oblíbená barva', ok: true, why: 'Oblíbená barva nikomu neprozradí, kde tě najít.' },
-          { t: '🏠 Adresa: Netopýří 13, Strašidlov', ok: false, why: 'Kdo zná tvou adresu, ví, kde tě najde. Ta na internet nepatří!' },
-          { t: '📱 Moje telefonní číslo', ok: false, why: 'Telefon dávej jen lidem, které znáš doopravdy – ne celému internetu.' },
-          { t: '🔑 Moje heslo', ok: false, why: 'Heslo nikdy nezveřejňuj. Znají ho jen rodiče.' },
-          { t: '🏫 Fotka v tričku s názvem mé školy', ok: false, why: 'Podle názvu školy cizí člověk zjistí, kde tě každý den najde.' },
-          { t: '💬 „Rodiče odjeli, jsem sám doma.“', ok: false, why: 'Tohle nikdy nepiš – cizí lidé by věděli, že jsi bez dospělých.' }
+          { t: '🐶 Fotka mého pejska', ok: true, why: 'Fotka zvířátka je v pořádku – jen ať na ní není vidět adresa.', more: 'Fotky zvířátek, hraček nebo vlastních výtvorů jsou bezpečné. Jen pozor, aby v pozadí nebylo vidět číslo domu nebo název ulice.' },
+          { t: '🎨 Obrázek, který jsem namaloval', ok: true, why: 'Vlastní obrázek klidně sdílej, je to tvoje dílo.', more: 'Obrázek, který jste nakreslili, nikomu neprozradí, kde bydlíte. Klidně se s ním pochlubte!' },
+          { t: '🦇 Přezdívka „Noční letec“ místo celého jména', ok: true, why: 'Přezdívka je chytrá – cizí lidé nepoznají, kdo jsi.', more: 'Přezdívka chrání: kamarádi vědí, že jste to vy, ale cizí lidé vaše skutečné jméno nezjistí.' },
+          { t: '🌈 Moje oblíbená barva', ok: true, why: 'Oblíbená barva nikomu neprozradí, kde tě najít.', more: 'Oblíbená barva, jídlo nebo zvíře jsou bezpečné věci – nikdo vás podle nich nenajde. Takové věci sdílet můžete.' },
+          { t: '🏠 Adresa: Netopýří 13, Strašidlov', ok: false, why: 'Kdo zná tvou adresu, ví, kde tě najde. Ta na internet nepatří!', more: 'S adresou by vás cizí člověk mohl najít doma. Adresu znají rodina a kamarádi, kteří k vám chodí – na internetu nemá co dělat.' },
+          { t: '📱 Moje telefonní číslo', ok: false, why: 'Telefon dávej jen lidem, které znáš doopravdy – ne celému internetu.', more: 'Kdo má vaše číslo, může vám volat a psát kdykoli, i když ho neznáte. Číslo dávejte jen lidem, které znáte ve skutečnosti, a raději se poraďte s rodiči.' },
+          { t: '🔑 Moje heslo', ok: false, why: 'Heslo nikdy nezveřejňuj. Znají ho jen rodiče.', more: 'Zveřejněné heslo je jako klíč od domu pověšený na dveřích. Kdokoli by se mohl přihlásit za vás.' },
+          { t: '🏫 Fotka v tričku s názvem mé školy', ok: false, why: 'Podle názvu školy cizí člověk zjistí, kde tě každý den najde.', more: 'Podle loga nebo názvu školy cizí člověk zjistí, kam každý den chodíte. Na fotkách proto hlídejte, co je vidět v pozadí a na oblečení.' },
+          { t: '💬 „Rodiče odjeli, jsem sám doma.“', ok: false, why: 'Tohle nikdy nepiš – cizí lidé by věděli, že jsi bez dospělých.', more: 'Zprávu, že jste sami doma nebo že rodina odjela na dovolenou, by mohl zneužít zlý člověk. Takové věci se dají napsat až potom, co se vrátíte.' }
         ]
       }, function () {
         c.innerHTML = '<div class="fact"><b>Věděli jste?</b> Většina sociálních sítí (třeba TikTok nebo Instagram) je povolená až od 13 let. Bedřich si profil založí s rodiči.</div>' +
@@ -880,19 +900,19 @@
         }).join('') + '</div>';
       var qs = [
         { seed: 3, text: 'Co uděláte?', options: [
-          { t: '😂 Pošlu taky smajlíka – je to jen legrace', why: 'I smajlík znamená „souhlasím“. Tondovi to ubližuje.' },
-          { t: '📤 Přepošlu fotku do jiné skupiny', why: 'Tím šikanu šíříte dál a ubližujete ještě víc.' },
-          { t: '🙈 Nic. Hlavně ať si mě nevšimnou', why: 'Mlčení šikanu nezastaví. Říct to dospělému není žalování – je to pomoc.' },
+          { t: '😂 Pošlu taky smajlíka – je to jen legrace', why: 'I smajlík znamená „souhlasím“. Tondovi to ubližuje.', more: 'Když se ostatní smějí, ten, komu se smějí, se cítí ještě víc sám. Každý smajlík nebo like je pro něj další rána. Kyberšikana bolí stejně jako šikana ve škole.' },
+          { t: '📤 Přepošlu fotku do jiné skupiny', why: 'Tím šikanu šíříte dál a ubližujete ještě víc.', more: 'Fotka se může dostat k desítkám lidí a už nejde vzít zpátky. Šířit cizí fotky bez dovolení je špatné – i když to myslíte jako legraci.' },
+          { t: '🙈 Nic. Hlavně ať si mě nevšimnou', why: 'Mlčení šikanu nezastaví. Říct to dospělému není žalování – je to pomoc.', more: 'Když všichni mlčí, ten, kdo ubližuje, si myslí, že je to v pořádku. Žalovat znamená chtít, aby měl někdo průšvih. Říct to dospělému, aby někomu pomohl, je odvaha.' },
           { t: '🛡️ Napíšu „Tohle není fér, nechte ho“ a řeknu to dospělému', ok: true, why: 'Správně! Zastali jste se Tondy a zapojili dospělého.' }
         ] },
         { seed: 5, text: 'Teď Kuba píše VÁM. Co uděláte?', options: [
-          { t: '😡 Odepíšu mu něco ještě horšího', why: 'Oplácení všechno zhorší – a pak byste šikanovali vy.' },
-          { t: '🗑️ Smažu to a nikomu nic neřeknu', why: 'Smazáním zmizí důkaz. A se strachem nemáte zůstat sami.' },
+          { t: '😡 Odepíšu mu něco ještě horšího', why: 'Oplácení všechno zhorší – a pak byste šikanovali vy.', more: 'Když oplácíte, hádka roste a nakonec můžete mít problém i vy. Nejsilnější je neodpovídat, uložit si důkaz a říct to dospělému.' },
+          { t: '🗑️ Smažu to a nikomu nic neřeknu', why: 'Smazáním zmizí důkaz. A se strachem nemáte zůstat sami.', more: 'Snímek obrazovky je důkaz – dospělý díky němu může zasáhnout. A strach se nese líp, když o něm ví někdo, komu věříte. Pomoct může i Linka bezpečí 116 111.' },
           { t: '📸 Udělám snímek obrazovky, zablokuji ho a řeknu to rodičům nebo učitelce', ok: true, why: 'Přesně tak! Důkaz, blokování a dospělý – to je nejlepší obrana.' }
         ] },
         { seed: 9, text: 'Tondovi je smutno. Co mu napíšete?', options: [
-          { t: '🤷 Nevím, mně se to netýká.', why: 'Tonda potřebuje slyšet, že v tom není sám.' },
-          { t: '🙄 Nebreč, to přejde.', why: 'Tím Tondovi moc nepomůžete. Zkuste mu ukázat, že stojíte při něm.' },
+          { t: '🤷 Nevím, mně se to netýká.', why: 'Tonda potřebuje slyšet, že v tom není sám.', more: 'Kdo zažívá šikanu, často se cítí úplně sám. Stačí jedna milá zpráva od kamaráda a hned je mu líp.' },
+          { t: '🙄 Nebreč, to přejde.', why: 'Tím Tondovi moc nepomůžete. Zkuste mu ukázat, že stojíte při něm.', more: '„Nebreč“ znamená, že jeho smutek nebereme vážně. Lepší je napsat, že jste s ním, a pomoct mu říct to dospělému.' },
           { t: '💪 Neboj, jsem s tebou. Pojď, řekneme to paní učitelce.', ok: true, why: 'Krásně! Takový kamarád je silnější než každý duch.' }
         ] }
       ];
@@ -916,14 +936,14 @@
         intro: '<p class="story-line">Phishula nastražil v labyrintu pasti. U každé situace rozhodněte: je to v pořádku, nebo past?</p>',
         yes: '✅ V pořádku', no: '🎃 Past!',
         items: [
-          { t: '⚠️ Vyskočí okno: „Tvůj tablet má 13 virů! Klikni a vyčisti ho!“', ok: false, why: 'Strašidelná okna jsou past. Nic neklikejte, zavřete je a řekněte dospělému.' },
-          { t: '💎 Hra slibuje: „1000 diamantů zdarma! Stačí zadat heslo od účtu.“', ok: false, why: 'Kdo chce heslo za dárek, chce ukrást účet. Je to past!' },
-          { t: '🎮 Neznámý hráč: „Je mi taky 10. Pošli fotku a sejdeme se. Ale nic neříkej rodičům.“', ok: false, why: 'Cizí člověk, který chce tajemství, fotky nebo schůzku, je největší nebezpečí. Hned to řekněte rodičům!' },
-          { t: '📺 Video: „Dej tablet do mikrovlnky a nabije se za vteřinu!“', ok: false, why: 'Na internetu je spousta nesmyslů. Tohle je lež – a nebezpečná!' },
-          { t: '📍 Aplikace s tapetami chce přístup k tvým kontaktům a poloze.', ok: false, why: 'Proč by tapety potřebovaly vědět, kde jste? Takové povolení s rodiči nepotvrzujte.' },
-          { t: '🏫 Paní učitelka pošle odkaz na procvičování na školním webu.', ok: true, why: 'To je v pořádku – odkaz je od paní učitelky a ze školního webu.' },
-          { t: '📚 S mámou hledáš na stránce knihovny knížku o netopýrech.', ok: true, why: 'Stránka knihovny a k tomu s mámou? Úplně v pořádku!' },
-          { t: '🙋 Než si stáhneš novou hru, zeptáš se rodičů.', ok: true, why: 'Přesně tak to dělají strážci internetu!' }
+          { t: '⚠️ Vyskočí okno: „Tvůj tablet má 13 virů! Klikni a vyčisti ho!“', ok: false, why: 'Strašidelná okna jsou past. Nic neklikejte, zavřete je a řekněte dospělému.', more: 'Opravdový antivir na vás nekřičí z reklamy. Strašidelná okna chtějí, abyste klikli, stáhli si škodlivý program nebo zaplatili. Okno zavřete, a když nejde, zavolejte dospělého.' },
+          { t: '💎 Hra slibuje: „1000 diamantů zdarma! Stačí zadat heslo od účtu.“', ok: false, why: 'Kdo chce heslo za dárek, chce ukrást účet. Je to past!', more: 'Hry rozdávají odměny samy ve hře, nikdy za heslo. Kdo heslo získá, vezme vám účet a všechno, co v něm máte.' },
+          { t: '🎮 Neznámý hráč: „Je mi taky 10. Pošli fotku a sejdeme se. Ale nic neříkej rodičům.“', ok: false, why: 'Cizí člověk, který chce tajemství, fotky nebo schůzku, je největší nebezpečí. Hned to řekněte rodičům!', more: 'Na internetu se může za dítě vydávat kdokoli, i dospělý. Kdo chce fotky, schůzku nebo tajemství před rodiči, je nebezpečný – i když je milý. Nic mu neposílejte, neodpovídejte a hned to ukažte rodičům.' },
+          { t: '📺 Video: „Dej tablet do mikrovlnky a nabije se za vteřinu!“', ok: false, why: 'Na internetu je spousta nesmyslů. Tohle je lež – a nebezpečná!', more: 'Natočit video a tvrdit v něm cokoli může každý. Než něčemu uvěříte, zeptejte se: Kdo to říká? Dává to smysl? Ověřte si to u dospělého. A tablet do mikrovlnky nikdy – mohl by začít hořet!' },
+          { t: '📍 Aplikace s tapetami chce přístup k tvým kontaktům a poloze.', ok: false, why: 'Proč by tapety potřebovaly vědět, kde jste? Takové povolení s rodiči nepotvrzujte.', more: 'Aplikace má dostat jen povolení, která opravdu potřebuje. Tapety nepotřebují vaše kontakty ani polohu – takové aplikace často sbírají údaje o lidech.' },
+          { t: '🏫 Paní učitelka pošle odkaz na procvičování na školním webu.', ok: true, why: 'To je v pořádku – odkaz je od paní učitelky a ze školního webu.', more: 'Odkaz od paní učitelky na školní web je bezpečný: víte, kdo ho poslal, i kam vede. Ne všechno na internetu je past!' },
+          { t: '📚 S mámou hledáš na stránce knihovny knížku o netopýrech.', ok: true, why: 'Stránka knihovny a k tomu s mámou? Úplně v pořádku!', more: 'Stránky knihovny jsou důvěryhodné a hledání s mámou je úplně v pořádku. Ne všechno na internetu je past!' },
+          { t: '🙋 Než si stáhneš novou hru, zeptáš se rodičů.', ok: true, why: 'Přesně tak to dělají strážci internetu!', more: 'Rodiče zkontrolují, jestli je hra bezpečná a vhodná pro váš věk. Zeptat se předem je chytré, ne trapné.' }
         ]
       }, stationSolved);
     }
@@ -947,7 +967,8 @@
       if (right) { finish(); return; }
       lockInput = [];
       S.wrong++; sfx.bad();
-      freeze(FREEZE_LOCK, 'Brána se nepohnula! Zkontrolujte čísla a pořadí podle obrázků na kartičce.');
+      freeze(FREEZE_LOCK, 'Brána se nepohnula! Kód není správně.',
+        'Na kartičce máte čísla zapsaná pod obrázky. Zadejte je zleva doprava ve stejném pořadí jako na bráně: lebka, pavouk, netopýr, duch, dýně. Zkontrolujte, jestli jste si některé číslo nespletli – třeba 1 a 7.');
     } else if (lockInput.length < 5) {
       lockInput.push(+k); fillShown();
     }
@@ -965,7 +986,8 @@
       b.onclick = function () {
         S.lockShown[b.getAttribute('data-k')] = true; S.hints++;
         el.remove(); lockInput = [];
-        freeze(FREEZE_LOST, 'Phishula neochotně prozrazuje číslo…');
+        freeze(FREEZE_LOST, 'Phishula neochotně prozrazuje číslo… Až čas doběhne, uvidíte ho v bráně.',
+          'Tip pro příště: důležité věci si hned zapisujte a hlídejte – stejně jako hesla. Kdo má hesla jen „v hlavě“ nebo na papírku, který se válí kdekoli, o ně snadno přijde.', 'hint');
         render();
       };
     });

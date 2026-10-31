@@ -390,3 +390,21 @@ input:focus { border-color: var(--team); box-shadow: 0 0 0 3px color-mix(in srgb
 /* Vysvětlení po správné odpovědi – čeká na tlačítko Dál */
 .explain { background: rgba(125, 255, 155, .14); border: 2px solid var(--slime); border-radius: 16px; padding: 12px 16px; color: var(--text); font-size: 1.1em; text-align: left; margin-top: 12px; animation: pop .3s; }
 .btn-next { margin-top: 12px; max-width: 620px; margin-left: auto; margin-right: auto; display: flex; }
+
+/* Zmrazení s podrobným vysvětlením */
+.freeze-box { max-width: 680px; width: 100%; max-height: 94vh; overflow: auto; text-align: left; }
+.freeze-top { display: flex; align-items: center; gap: 16px; }
+.freeze-top .phishula { width: 110px; margin: 0; flex: none; }
+.freeze-top h2 { margin: 0; }
+.freeze-box .freeze-count { font-size: 56px; text-align: left; }
+.freeze-bar { height: 10px; border-radius: 6px; background: rgba(255, 255, 255, .12); overflow: hidden; margin: 8px 0 12px; }
+.freeze-bar span { display: block; height: 100%; background: var(--ice); border-radius: 6px; transition: width .25s linear; }
+.freeze-msg { font-size: 1.25em; font-weight: 800; margin: 0 0 10px; }
+.freeze-more { background: #f6f0e4; color: #24163a; border-radius: 16px; padding: 12px 16px; font-size: 1.1em; }
+.freeze-more b { color: #7a3fc9; }
+.freeze-more p { margin: 4px 0 0; }
+.freeze-more[hidden] { display: none; }
+.freeze-hint .freeze-box { border-color: #ffd43b; box-shadow: 0 0 60px rgba(255, 212, 59, .35); }
+.freeze-hint h2, .freeze-hint .freeze-count { color: #ffd43b; text-shadow: 0 0 24px rgba(255, 212, 59, .6); }
+.freeze-hint .freeze-bar span { background: #ffd43b; }
+.freeze-hint .freeze-msg { color: #ffe08a; }
